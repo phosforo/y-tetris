@@ -1,6 +1,6 @@
 import { Graphics, Container } from "pixi.js";
 
-export default class Cell extends Container {
+export default class BoardBlock extends Container {
     constructor(color, cellSize) {
         super();
         this.graphics = new Graphics();

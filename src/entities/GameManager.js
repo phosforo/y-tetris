@@ -35,6 +35,10 @@ export default class GameManager {
             this.soundManager.playSound(SoundConst.MOVE);
         };
 
+        this.gameArea.onEndCallback = () => {
+            this.soundManager.playSound(SoundConst.END);
+        };
+
         this.keyboardManager.pressCallback = (direction) => {
             this.processingInput = true;
             switch (direction) {
@@ -52,13 +56,14 @@ export default class GameManager {
                 this.gameArea.showGrid();
                 break;
             }
-            this.gameArea.keyPressed();
+            this.gameArea.onKeyPressed();
             this.processingInput = false;
         };
         this.keyboardManager.setup();
+        this.gameArea.setup();
     }
 
-    isProcessing(){
+    inProcessingState(){
         return this.processingInput;
     }
 
@@ -72,7 +77,7 @@ export default class GameManager {
         }
 
         this.time = timeNow;
-        if (!this.isProcessing()) this.gameArea.update();
+        if (!this.inProcessingState()) this.gameArea.update();
 
     }
 }

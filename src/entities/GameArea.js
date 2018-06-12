@@ -5,7 +5,7 @@ import * as BlockShapeConsts from "../constants/BlockShapes";
 import * as BlockActionConsts from "../constants/BlockActions";
 import * as CollisionResolver from "./ColisionResolver";
 import * as CollisionConsts from "../constants/Collision";
-import Cell from "./Cell";
+import Cell from "./BoardBlock";
 import GameOverOverlay from "./GameOverOverlay";
 
 export default class GameArea extends Container {
@@ -15,7 +15,7 @@ export default class GameArea extends Container {
         this.internalWidth = width;
         this.internalHeight = height;
         this.backgroundGrid = new Graphics();
-        this.currentGameGrid = GameAreaConsts.INITIAL_GRID;
+        this.currentGameGrid = null;
         this.currentBlock = null;
         this.cellSize = Math.floor(Math.min(this.internalWidth / GameAreaConsts.DEFAULT_COLUMNS, this.internalHeight / GameAreaConsts.DEFAULT_ROWS));
         this.onWallHitCallback = undefined;
@@ -28,13 +28,34 @@ export default class GameArea extends Container {
         this._showGrid = false;
         this.isGameOver = false;
         this.gameOverOverlay = new GameOverOverlay(width, height);
+        this.boardBlocksContainer = new Container();
         this.addChild(this.backgroundGrid);
+        this.addChild(this.boardBlocksContainer);
         this.addChild(this.gameOverOverlay);
     }
 
     setup() {
+        this.initializeBoardGame();
         this.gameOverOverlay.setup();
         this.gameOverOverlay.visible = false;
+    }
+
+    initializeBoardGame() {
+        this.currentGameGrid = new Array(GameAreaConsts.DEFAULT_ROWS).fill(null).map(() => {
+            return new Array(GameAreaConsts.DEFAULT_COLUMNS).fill(0);
+        });
+
+    }
+
+    createNewBlock() {
+        const newBlockToPlay = BlockFactory.createBlock(this.cellSize);
+        const blockMatrixSize = this.cellSize * BlockShapeConsts.SHAPE_SIZE;
+        const startCol = Math.floor((this.internalWidth - blockMatrixSize) * 0.5);
+        const startRow = -newBlockToPlay.blockShape.startRow * this.cellSize;
+        this.currentBlock = newBlockToPlay;
+        this.currentBlock.x = startCol;
+        this.currentBlock.y = startRow;
+        this.boardBlocksContainer.addChild(this.currentBlock);
     }
 
     showGrid() {
@@ -44,7 +65,7 @@ export default class GameArea extends Container {
 
     dropBlock() {
         if (!this.currentBlock) return;
-
+        // just get the position to go. lock block will be done on next tick through moveBlock
         const position = CollisionResolver.resolveDropPosition(this.currentBlock, this.currentGameGrid);
         this.currentBlock.y = position;
     }
@@ -61,13 +82,6 @@ export default class GameArea extends Container {
                 break;
             default:
                 break;
-        }
-    }
-
-    keyPressed() {
-        if (this.isGameOver) {
-            this.restartGameArea();
-            this.isGameOver = false;
         }
     }
 
@@ -112,6 +126,8 @@ export default class GameArea extends Container {
                 this.resolveCompleteLines();
                 this.isGameOver = this.currentBlock.y <= 0;
                 this.removeCurrentBlock();
+                if (this.isGameOver && this.onEndCallback)
+                    this.onEndCallback();
                 break;
 
             default:
@@ -119,37 +135,33 @@ export default class GameArea extends Container {
         }
     }
 
-    update() {
-        if (this.isGameOver){
-            if (this.onEndCallback)
-                this.onEndCallback();
+    onKeyPressed() {
+        if (this.isGameOver) {
+            this.restartGameArea();
+            this.isGameOver = false;
+            this.invalidateGrid = true;
         }
+    }
+
+    update() {
+        if (this.isGameOver)
+            this.invalidateGrid = true;
         else if (!this.currentBlock)
             this.createNewBlock();
         else
             this.moveBlockDown();
     }
 
-    createNewBlock() {
-        const newBlockToPlay = BlockFactory.createBlock(this.cellSize);
-        const blockMatrixSize = this.cellSize * BlockShapeConsts.SHAPE_SIZE;
-        const startCol = Math.floor((this.internalWidth - blockMatrixSize) * 0.5);
-        const startRow = -newBlockToPlay.blockShape.startRow * this.cellSize;
-        this.currentBlock = newBlockToPlay;
-        this.currentBlock.x = startCol;
-        this.currentBlock.y = startRow;
-        this.addChild(this.currentBlock);
-    }
-
     draw() {
+        this.gameOverOverlay.visible = this.isGameOver;
+        this.backgroundGrid.visible = !this.isGameOver;
+
         if (this.invalidateGrid) {
             this.drawGrid();
             this.invalidateGrid = false;
         }
         if (this.currentBlock)
             this.currentBlock.draw();
-
-        this.gameOverOverlay.visible = this.isGameOver;
     }
 
     drawGrid() {
@@ -184,7 +196,7 @@ export default class GameArea extends Container {
                     cell.x = gridCol * this.cellSize;
                     cell.y = gridRow * this.cellSize;
                     this.currentGameGrid[gridRow][gridCol] = cell;
-                    this.addChild(cell);
+                    this.boardBlocksContainer.addChild(cell);
                     this.invalidateGrid = true;
                 }
             }
@@ -225,20 +237,21 @@ export default class GameArea extends Container {
     }
 
     removeCurrentBlock() {
-        this.removeChild(this.currentBlock);
+        this.boardBlocksContainer.removeChild(this.currentBlock);
         this.currentBlock = null;
     }
 
     restartGameArea() {
         this.clearCellMatrix(this.currentGameGrid, GameAreaConsts.DEFAULT_ROWS, GameAreaConsts.DEFAULT_COLUMNS);
-        this.currentGameGrid = GameAreaConsts.INITIAL_GRID;
+        this.initializeBoardGame();
+        this.invalidateGrid = true;
     }
 
     clearCellMatrix(matrix, numRows, numCols) {
         for (let row = numRows - 1; row >= 0; row--)
             for (let col = 0; col < numCols; col++) {
                 let cell = matrix[row][col];
-                this.removeChild(cell);
+                this.boardBlocksContainer.removeChild(cell);
                 cell = null;
             }
     }
