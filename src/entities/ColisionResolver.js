@@ -38,43 +38,47 @@ export const resolveNeighbourBlocksCollision = (matrix, neighbourMatrix) => {
         for (let col = 0; col < neighbourMatrixColLength; col++)
             // check for blocks on board row
             // direct collision if shape has value on checked row
-            if (matrix[row][col] && neighbourMatrix[row][col]){
+            if (matrix[row][col] && neighbourMatrix[row][col])
                 return CollisionConsts.COLLISION;
-            }
     return CollisionConsts.NO_COLLISION;
 };
 
 export const sliceMatrix = (matrix, startRow, startCol, lengthRow, lengthCol) => {
-    const colEndIdx = startCol + lengthCol > matrix.length ? matrix.length : startCol + lengthCol;
-    const rowEndIdx = startRow + lengthRow > matrix.length ? matrix.length : startRow + lengthRow;
+    //ignored zeroed start row
+    const zeroedStartCol = startCol < 0 ? 0 : startCol;
+
+    const colEndIdx = zeroedStartCol + lengthCol > matrix.length ? matrix.length : startCol + lengthCol;
+    const rowEndIdx = startRow + lengthRow > matrix.length ? matrix.length : startRow+ lengthRow;
+
     // copy the matrix
     const matrixCopy = matrix.map((row) => {
         return row.slice();
     });
 
-
     const slicedMatrix = matrixCopy.map((row) => {
-        return row.slice(startCol, colEndIdx);
+        return row.slice(zeroedStartCol, colEndIdx);
     }).slice(startRow, rowEndIdx);
 
     // add fake neighbour rows if needed
     const numFakeRowsToAdd = lengthRow - slicedMatrix.length;
-    if (numFakeRowsToAdd > 0){
+    if (numFakeRowsToAdd > 0) {
         const fakeRows = new Array(lengthCol).fill(1);
         slicedMatrix.push(fakeRows);
     }
 
     // add fake neighbour cols if needed
-    const numFakeColsToAdd = slicedMatrix[0].length < lengthCol;
+    const numFakeColsToAdd = Math.abs(slicedMatrix[0].length - lengthCol);
+
     if (numFakeColsToAdd > 0) {
         const fakeCols = new Array(numFakeColsToAdd).fill(1);
         slicedMatrix.map((row) => {
-            row.push(fakeCols);
+            if (startCol > 0)
+                row.push(...fakeCols);
+            else
+                row.unshift(...fakeCols);
         });
     }
-
     return slicedMatrix;
-
 };
 
 export const pixelToMatrix = (val, cellSize) => {

@@ -31,10 +31,7 @@ Install the (dev)dependencies:
 ```bash
 npm install
 ```
-Run en(dev)dependencies:
-```bash
-npm install
-```
+
 ## Development
 Start the development server (with hot reloading enabled):
 
@@ -55,8 +52,9 @@ This will copy all build artifacts to the dist/ folder.
 
 ## Know issues (BUGS)
 
-* Wrong left wall collision resolution
-* some block gets locked down incorrectly if left wall collision is failing
+* ~~Wrong left wall collision resolution~~
+* ~~some block gets locked down incorrectly if left wall collision is failing~~
+* I block piece lock on board incorrectly if horizontally
 
 ## TODO's 
 
