@@ -52,6 +52,7 @@ export default class GameManager {
                 this.gameArea.showGrid();
                 break;
             }
+            this.gameArea.keyPressed();
             this.processingInput = false;
         };
         this.keyboardManager.setup();

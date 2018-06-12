@@ -38,16 +38,11 @@ export const resolveNeighbourBlocksCollision = (matrix, neighbourMatrix) => {
         for (let col = 0; col < neighbourMatrixColLength; col++)
             // check for blocks on board row
             // direct collision if shape has value on checked row
-            if (matrix[row][col] && neighbourMatrix[row][col])
-                return CollisionConsts.BLOCKS_COLLISION;
-
-
-    if (neighbourMatrix.length === 2)
-        return CollisionConsts.BOTTOM_COLLISION;
-    else
-        return CollisionConsts.NO_COLLISION;
+            if (matrix[row][col] && neighbourMatrix[row][col]){
+                return CollisionConsts.COLLISION;
+            }
+    return CollisionConsts.NO_COLLISION;
 };
-
 
 export const sliceMatrix = (matrix, startRow, startCol, lengthRow, lengthCol) => {
     const colEndIdx = startCol + lengthCol > matrix.length ? matrix.length : startCol + lengthCol;
@@ -62,7 +57,21 @@ export const sliceMatrix = (matrix, startRow, startCol, lengthRow, lengthCol) =>
         return row.slice(startCol, colEndIdx);
     }).slice(startRow, rowEndIdx);
 
+    // add fake neighbour rows if needed
+    const numFakeRowsToAdd = lengthRow - slicedMatrix.length;
+    if (numFakeRowsToAdd > 0){
+        const fakeRows = new Array(lengthCol).fill(1);
+        slicedMatrix.push(fakeRows);
+    }
 
+    // add fake neighbour cols if needed
+    const numFakeColsToAdd = slicedMatrix[0].length < lengthCol;
+    if (numFakeColsToAdd > 0) {
+        const fakeCols = new Array(numFakeColsToAdd).fill(1);
+        slicedMatrix.map((row) => {
+            row.push(fakeCols);
+        });
+    }
 
     return slicedMatrix;
 
@@ -78,16 +87,16 @@ export const matrixToPixel = (val, cellSize) => {
 
 export const resolveDropPosition = (block, board) => {
     const startRow = pixelToMatrix(block.y, block.cellSize);
-    const startCol = pixelToMatrix(block.y, block.cellSize);
+    const startCol = pixelToMatrix(block.x, block.cellSize);
     const shape = block.currentShapeState;
     let lastValidRow = startRow;
 
-    for (let row = startRow; row <= GameAreaConsts.DEFAULT_ROWS - 1; row++) {
+    for (let row = startRow; row < GameAreaConsts.DEFAULT_ROWS; row++) {
         const neighbourMatrix = sliceMatrix(board, row, startCol, BlockShapeConsts.SHAPE_SIZE, BlockShapeConsts.SHAPE_SIZE);
         const collision = resolveNeighbourBlocksCollision(shape, neighbourMatrix);
         if (collision !== CollisionConsts.NO_COLLISION)
             break;
         lastValidRow = row;
     }
-    return matrixToPixel(lastValidRow - 1, block.cellSize);
+    return matrixToPixel(lastValidRow, block.cellSize);
 };
