@@ -9,6 +9,7 @@ import GameOverOverlay from "./GameOverOverlay";
 import PreviewBlocArea from "./PreviewBlockArea";
 import BlockFactory from "./BlockFactory";
 import ScoreArea from "./ScoreArea";
+import ScoreResolver from "./ScoreResolver";
 
 export default class GameArea extends Container {
 
@@ -34,7 +35,8 @@ export default class GameArea extends Container {
         this.boardBlocksContainer = new Container();
         this.previewBlockArea = new PreviewBlocArea(previewCellSize);
         this.previewBlockArea.y = height - BlockShapeConsts.SHAPE_SIZE * cellSize + 2;
-        this.scoreArea = new ScoreArea(width, height);
+        this.scoreResolver = new ScoreResolver();
+        this.scoreArea = new ScoreArea(this.scoreResolver,width, height);
         this.scoreArea.x = 80;
         this.scoreArea.y = height - BlockShapeConsts.SHAPE_SIZE * cellSize + 2;
         const backgroundBorder = new Graphics().lineStyle(1, 0xFFFFFF, 1).drawRect(1, 1, width - 1, GameAreaConsts.DEFAULT_ROWS * cellSize + 1);
@@ -63,7 +65,7 @@ export default class GameArea extends Container {
         this.currentGameGrid = new Array(GameAreaConsts.DEFAULT_ROWS).fill(null).map(() => {
             return new Array(GameAreaConsts.DEFAULT_COLUMNS).fill(0);
         });
-        this.scoreArea.resetScore();
+        this.scoreResolver.resetScore();
 
     }
 
@@ -85,6 +87,7 @@ export default class GameArea extends Container {
 
     dropBlock() {
         if (!this.currentBlockShape) return;
+        this.scoreResolver.lastUserAction = BlockActionConsts.DROP;
         // just get the position to go. lock block will be done on next tick through moveBlock
         const position = CollisionResolver.resolveDropPosition(this.currentBlockShape, this.currentGameGrid);
         this.currentBlockShape.y = position;
@@ -92,7 +95,7 @@ export default class GameArea extends Container {
 
     rotateBlock() {
         if (!this.currentBlockShape) return;
-
+        this.scoreResolver.lastUserAction = BlockActionConsts.ROTATE;
         const collision = CollisionResolver.resolve(this.currentBlockShape, this.currentGameGrid, BlockActionConsts.ROTATE);
         switch (collision) {
             case CollisionConsts.NO_COLLISION:
@@ -107,7 +110,7 @@ export default class GameArea extends Container {
 
     moveBlock(direction) {
         if (!this.currentBlockShape) return;
-
+        this.scoreResolver.lastUserAction = direction;
         const directionMultiplier = direction === BlockActionConsts.MOVE_LEFT ? -1 : 1;
         const currentBlock = this.currentBlockShape;
         const currentGameGrid = this.currentGameGrid;
@@ -129,7 +132,7 @@ export default class GameArea extends Container {
 
     moveBlockDown() {
         if (!this.currentBlockShape) return;
-
+        this.scoreResolver.lastAutoAction = BlockActionConsts.DROP_ONE_ROW;
         const currentBlock = this.currentBlockShape;
         const currentGameGrid = this.currentGameGrid;
         const collision = CollisionResolver.resolve(currentBlock, currentGameGrid, BlockActionConsts.DROP_ONE_ROW);
@@ -258,8 +261,8 @@ export default class GameArea extends Container {
             if (this.onLineCompleteCallback)
                 this.onLineCompleteCallback();
             this.invalidateGrid = true;
-            this.scoreArea.updateScore(totalRowsToDelete);
         }
+        this.scoreResolver.resolve(totalRowsToDelete);
     }
 
     removeCurrentBlock() {
