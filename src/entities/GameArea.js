@@ -187,7 +187,7 @@ export default class GameArea extends Container {
     lockBlockToGrid() {
         //start from the end
         for (let row = BlockShapeConsts.SHAPE_SIZE - 1; row >= 0; row--)
-            for (let col = 0; col < BlockShapeConsts.SHAPE_SIZE - 1; col++) {
+            for (let col = 0; col < BlockShapeConsts.SHAPE_SIZE ; col++) {
                 const shape = this.currentBlock.currentShapeState;
                 const gridCol = Math.floor(this.currentBlock.x / this.cellSize) + col;
                 const gridRow = Math.floor(this.currentBlock.y / this.cellSize) + row;

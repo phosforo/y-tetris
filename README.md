@@ -54,7 +54,7 @@ This will copy all build artifacts to the dist/ folder.
 
 * ~~Wrong left wall collision resolution~~
 * ~~some block gets locked down incorrectly if left wall collision is failing~~
-* I block piece lock on board incorrectly if horizontally
+* ~~I block piece lock on board incorrectly if horizontally~~
 
 ## TODO's 
 
