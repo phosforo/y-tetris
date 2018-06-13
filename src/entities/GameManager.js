@@ -2,16 +2,23 @@ import * as KeyActions from '../constants/BlockActions';
 import KeyboardManager from "./KeyboardManager";
 import SoundManager from "./SoundManager";
 import * as SoundConst from "../constants/Sound";
+import GameArea from "./GameArea";
+import * as GameAreaConsts from "../constants/GameArea";
 
 export default class GameManager {
 
-    constructor(context, gameArea) {
-        this.gameArea = gameArea;
+    constructor(context,application, width, height) {
+        this.application = application;
+        const gameCellSize = Math.floor(Math.min(width / GameAreaConsts.DEFAULT_COLUMNS, height / GameAreaConsts.DEFAULT_ROWS));
+        const previewCellSize = 20;
+        this.updateTick = 1000; // 1000/40 = 25 frames per second
+        this.time = 0;
+
         this.keyboardManager = new KeyboardManager(context);
         this.soundManager = new SoundManager();
 
-        this.updateTick = 1000; // 1000/40 = 25 frames per second
-        this.time = 0;
+        this.gameArea = new GameArea(width,height, gameCellSize, previewCellSize);
+        application.stage.addChild(this.gameArea);
     }
 
     setup(){
@@ -66,7 +73,6 @@ export default class GameManager {
     inProcessingState(){
         return this.processingInput;
     }
-
 
     run(){
         const timeNow = (new Date()).getTime();

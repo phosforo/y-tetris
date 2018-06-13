@@ -7,7 +7,7 @@ export default class GameOverOverlay extends Container {
         super();
         this.internalWidth = width;
         this.internalHeight = height;
-        const background = new Graphics().beginFill(0x000000,1).drawRect(0,0, width, height).endFill();
+        const background = new Graphics().beginFill(0x000000,0.5).drawRect(0,0, width, height).endFill();
         this.gameOverText = new Text(TextConsts.GAME_OVER_TEXT);
         this.hitAnyKeyText = new Text(TextConsts.PRESS_ANY_KEY);
         this.addChild(background);
@@ -17,7 +17,7 @@ export default class GameOverOverlay extends Container {
 
     setup(){
         const gameOverStyle = new TextStyle({
-            fontFamily: 'Symbol',
+            fontFamily: 'Impact',
             fontSize: 36,
             fontStyle: 'normal',
             fontWeight: 'bold',
@@ -32,7 +32,7 @@ export default class GameOverOverlay extends Container {
         });
 
         const hitKeyStyle = new TextStyle({
-            fontFamily: 'Symbol',
+            fontFamily: 'Verdana',
             fontSize: 20,
             fontStyle: 'normal',
             fill: '#ffff00', // gradient

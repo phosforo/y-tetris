@@ -11,7 +11,7 @@ import YTetris from "./entities/YTetris";
 const setup = () => {
     const application = new Application({ width: GameConsts.CANVAS_WIDTH, height: GameConsts.CANVAS_HEIGHT });
     document.getElementById("main").appendChild(application.view);
-    const game = new YTetris(window,application, GameConsts.CANVAS_WIDTH, GameConsts.CANVAS_HEIGHT);
+    const game = new YTetris(window, application, GameConsts.CANVAS_WIDTH, GameConsts.CANVAS_HEIGHT);
     game.setup();
     game.runGame();
 };

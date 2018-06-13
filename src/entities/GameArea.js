@@ -1,23 +1,25 @@
 import { Container, Graphics } from 'pixi.js';
 import * as GameAreaConsts from '../constants/GameArea';
-import * as BlockFactory from "./BlockFactory";
 import * as BlockShapeConsts from "../constants/BlockShapes";
 import * as BlockActionConsts from "../constants/BlockActions";
 import * as CollisionResolver from "./ColisionResolver";
 import * as CollisionConsts from "../constants/Collision";
 import Cell from "./BoardBlock";
 import GameOverOverlay from "./GameOverOverlay";
+import PreviewBlocArea from "./PreviewBlockArea";
+import BlockFactory from "./BlockFactory";
 
 export default class GameArea extends Container {
 
-    constructor(width, height) {
+    constructor(width, height, cellSize, previewCellSize) {
         super();
+        this.blockFactory = new BlockFactory(cellSize,previewCellSize);
         this.internalWidth = width;
         this.internalHeight = height;
         this.backgroundGrid = new Graphics();
         this.currentGameGrid = null;
-        this.currentBlock = null;
-        this.cellSize = Math.floor(Math.min(this.internalWidth / GameAreaConsts.DEFAULT_COLUMNS, this.internalHeight / GameAreaConsts.DEFAULT_ROWS));
+        this.currentBlockShape = null;
+        this.cellSize = cellSize;
         this.onWallHitCallback = undefined;
         this.onDropCallback = undefined;
         this.onLineCompleteCallback = undefined;
@@ -29,12 +31,23 @@ export default class GameArea extends Container {
         this.isGameOver = false;
         this.gameOverOverlay = new GameOverOverlay(width, height);
         this.boardBlocksContainer = new Container();
+        this.previewBlockArea = new PreviewBlocArea(previewCellSize);
+        this.previewBlockArea.y = height - BlockShapeConsts.SHAPE_SIZE * cellSize + 2;
+        const backgroundBorder = new Graphics().lineStyle(1, 0xFFFFFF, 1).drawRect(1, 1, width-1, GameAreaConsts.DEFAULT_ROWS * cellSize + 1);
+        this.addChild(backgroundBorder);
         this.addChild(this.backgroundGrid);
         this.addChild(this.boardBlocksContainer);
+        this.addChild(this.previewBlockArea);
         this.addChild(this.gameOverOverlay);
     }
 
     setup() {
+        this.blockFactory.onNextBlockCallBack = (block) => {
+            this.previewBlockArea.nextPreviewBlock(block);
+        };
+
+        this.blockFactory.setup();
+        this.previewBlockArea.setup();
         this.initializeBoardGame();
         this.gameOverOverlay.setup();
         this.gameOverOverlay.visible = false;
@@ -47,15 +60,15 @@ export default class GameArea extends Container {
 
     }
 
-    createNewBlock() {
-        const newBlockToPlay = BlockFactory.createBlock(this.cellSize);
+    createNewBlockShape() {
+        const newBlockToPlay = this.blockFactory.next();
         const blockMatrixSize = this.cellSize * BlockShapeConsts.SHAPE_SIZE;
         const startCol = Math.floor((this.internalWidth - blockMatrixSize) * 0.5);
         const startRow = -newBlockToPlay.blockShape.startRow * this.cellSize;
-        this.currentBlock = newBlockToPlay;
-        this.currentBlock.x = startCol;
-        this.currentBlock.y = startRow;
-        this.boardBlocksContainer.addChild(this.currentBlock);
+        this.currentBlockShape = newBlockToPlay;
+        this.currentBlockShape.x = startCol;
+        this.currentBlockShape.y = startRow;
+        this.boardBlocksContainer.addChild(this.currentBlockShape);
     }
 
     showGrid() {
@@ -64,19 +77,19 @@ export default class GameArea extends Container {
     }
 
     dropBlock() {
-        if (!this.currentBlock) return;
+        if (!this.currentBlockShape) return;
         // just get the position to go. lock block will be done on next tick through moveBlock
-        const position = CollisionResolver.resolveDropPosition(this.currentBlock, this.currentGameGrid);
-        this.currentBlock.y = position;
+        const position = CollisionResolver.resolveDropPosition(this.currentBlockShape, this.currentGameGrid);
+        this.currentBlockShape.y = position;
     }
 
     rotateBlock() {
-        if (!this.currentBlock) return;
+        if (!this.currentBlockShape) return;
 
-        const collision = CollisionResolver.resolve(this.currentBlock, this.currentGameGrid, BlockActionConsts.ROTATE);
+        const collision = CollisionResolver.resolve(this.currentBlockShape, this.currentGameGrid, BlockActionConsts.ROTATE);
         switch (collision) {
             case CollisionConsts.NO_COLLISION:
-                this.currentBlock.rotate();
+                this.currentBlockShape.rotate();
                 if (this.onRotateCallback)
                     this.onRotateCallback();
                 break;
@@ -86,15 +99,15 @@ export default class GameArea extends Container {
     }
 
     moveBlock(direction) {
-        if (!this.currentBlock) return;
+        if (!this.currentBlockShape) return;
 
         const directionMultiplier = direction === BlockActionConsts.MOVE_LEFT ? -1 : 1;
-        const currentBlock = this.currentBlock;
+        const currentBlock = this.currentBlockShape;
         const currentGameGrid = this.currentGameGrid;
         const collision = CollisionResolver.resolve(currentBlock, currentGameGrid, direction);
         switch (collision) {
             case CollisionConsts.NO_COLLISION:
-                this.currentBlock.x += this.cellSize * directionMultiplier;
+                this.currentBlockShape.x += this.cellSize * directionMultiplier;
                 if (this.onMoveCallback)
                     this.onMoveCallback();
                 break;
@@ -108,14 +121,14 @@ export default class GameArea extends Container {
     }
 
     moveBlockDown() {
-        if (!this.currentBlock) return;
+        if (!this.currentBlockShape) return;
 
-        const currentBlock = this.currentBlock;
+        const currentBlock = this.currentBlockShape;
         const currentGameGrid = this.currentGameGrid;
         const collision = CollisionResolver.resolve(currentBlock, currentGameGrid, BlockActionConsts.DROP_ONE_ROW);
         switch (collision) {
             case CollisionConsts.NO_COLLISION:
-                this.currentBlock.y += this.cellSize;
+                this.currentBlockShape.y += this.cellSize;
                 if (this.onMoveCallback)
                     this.onMoveCallback();
                 break;
@@ -124,7 +137,7 @@ export default class GameArea extends Container {
                     this.onDropCallback();
                 this.lockBlockToGrid();
                 this.resolveCompleteLines();
-                this.isGameOver = this.currentBlock.y <= 0;
+                this.isGameOver = this.currentBlockShape.y <= 0;
                 this.removeCurrentBlock();
                 if (this.isGameOver && this.onEndCallback)
                     this.onEndCallback();
@@ -146,8 +159,8 @@ export default class GameArea extends Container {
     update() {
         if (this.isGameOver)
             this.invalidateGrid = true;
-        else if (!this.currentBlock)
-            this.createNewBlock();
+        else if (!this.currentBlockShape)
+            this.createNewBlockShape();
         else
             this.moveBlockDown();
     }
@@ -160,8 +173,9 @@ export default class GameArea extends Container {
             this.drawGrid();
             this.invalidateGrid = false;
         }
-        if (this.currentBlock)
-            this.currentBlock.draw();
+        if (this.currentBlockShape)
+            this.currentBlockShape.draw();
+        this.previewBlockArea.draw();
     }
 
     drawGrid() {
@@ -188,11 +202,11 @@ export default class GameArea extends Container {
         //start from the end
         for (let row = BlockShapeConsts.SHAPE_SIZE - 1; row >= 0; row--)
             for (let col = 0; col < BlockShapeConsts.SHAPE_SIZE ; col++) {
-                const shape = this.currentBlock.currentShapeState;
-                const gridCol = Math.floor(this.currentBlock.x / this.cellSize) + col;
-                const gridRow = Math.floor(this.currentBlock.y / this.cellSize) + row;
+                const shape = this.currentBlockShape.currentShapeState;
+                const gridCol = Math.floor(this.currentBlockShape.x / this.cellSize) + col;
+                const gridRow = Math.floor(this.currentBlockShape.y / this.cellSize) + row;
                 if (shape[row][col]) {
-                    const cell = new Cell(this.currentBlock.shape.color, this.cellSize);
+                    const cell = new Cell(this.currentBlockShape.shape.color, this.cellSize);
                     cell.x = gridCol * this.cellSize;
                     cell.y = gridRow * this.cellSize;
                     this.currentGameGrid[gridRow][gridCol] = cell;
@@ -237,8 +251,8 @@ export default class GameArea extends Container {
     }
 
     removeCurrentBlock() {
-        this.boardBlocksContainer.removeChild(this.currentBlock);
-        this.currentBlock = null;
+        this.boardBlocksContainer.removeChild(this.currentBlockShape);
+        this.currentBlockShape = null;
     }
 
     restartGameArea() {
