@@ -60,7 +60,8 @@ This will copy all build artifacts to the dist/ folder.
 
 * ~~Add preview area for next block~~
 * Add game states logic for [loading, welcome screen, game, end screen, credits]
-* Add score area and logic. Introducing combos for multi lines etc
+* ~~Add score area and simple score logic~~ 
+* Introducing combos for multi lines etc
 * Add welcome screen
 * Add credits screen
 * Add better sounds :)

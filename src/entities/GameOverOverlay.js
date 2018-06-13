@@ -21,7 +21,7 @@ export default class GameOverOverlay extends Container {
             fontSize: 36,
             fontStyle: 'normal',
             fontWeight: 'bold',
-            fill: ['#00ffff', '#ffff00'], // gradient
+            fill: ['#00ffff', '#ffff00'],
             stroke: '#4a1850',
             strokeThickness: 5,
             dropShadow: true,
@@ -35,7 +35,7 @@ export default class GameOverOverlay extends Container {
             fontFamily: 'Verdana',
             fontSize: 20,
             fontStyle: 'normal',
-            fill: '#ffff00', // gradient
+            fill: '#ffff00',
             stroke: '#4a1850',
             strokeThickness: 1
         });

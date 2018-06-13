@@ -8,12 +8,13 @@ import Cell from "./BoardBlock";
 import GameOverOverlay from "./GameOverOverlay";
 import PreviewBlocArea from "./PreviewBlockArea";
 import BlockFactory from "./BlockFactory";
+import ScoreArea from "./ScoreArea";
 
 export default class GameArea extends Container {
 
     constructor(width, height, cellSize, previewCellSize) {
         super();
-        this.blockFactory = new BlockFactory(cellSize,previewCellSize);
+        this.blockFactory = new BlockFactory(cellSize, previewCellSize);
         this.internalWidth = width;
         this.internalHeight = height;
         this.backgroundGrid = new Graphics();
@@ -33,11 +34,15 @@ export default class GameArea extends Container {
         this.boardBlocksContainer = new Container();
         this.previewBlockArea = new PreviewBlocArea(previewCellSize);
         this.previewBlockArea.y = height - BlockShapeConsts.SHAPE_SIZE * cellSize + 2;
-        const backgroundBorder = new Graphics().lineStyle(1, 0xFFFFFF, 1).drawRect(1, 1, width-1, GameAreaConsts.DEFAULT_ROWS * cellSize + 1);
+        this.scoreArea = new ScoreArea(width, height);
+        this.scoreArea.x = 80;
+        this.scoreArea.y = height - BlockShapeConsts.SHAPE_SIZE * cellSize + 2;
+        const backgroundBorder = new Graphics().lineStyle(1, 0xFFFFFF, 1).drawRect(1, 1, width - 1, GameAreaConsts.DEFAULT_ROWS * cellSize + 1);
         this.addChild(backgroundBorder);
         this.addChild(this.backgroundGrid);
         this.addChild(this.boardBlocksContainer);
         this.addChild(this.previewBlockArea);
+        this.addChild(this.scoreArea);
         this.addChild(this.gameOverOverlay);
     }
 
@@ -48,6 +53,7 @@ export default class GameArea extends Container {
 
         this.blockFactory.setup();
         this.previewBlockArea.setup();
+        this.scoreArea.setup();
         this.initializeBoardGame();
         this.gameOverOverlay.setup();
         this.gameOverOverlay.visible = false;
@@ -57,6 +63,7 @@ export default class GameArea extends Container {
         this.currentGameGrid = new Array(GameAreaConsts.DEFAULT_ROWS).fill(null).map(() => {
             return new Array(GameAreaConsts.DEFAULT_COLUMNS).fill(0);
         });
+        this.scoreArea.resetScore();
 
     }
 
@@ -201,7 +208,7 @@ export default class GameArea extends Container {
     lockBlockToGrid() {
         //start from the end
         for (let row = BlockShapeConsts.SHAPE_SIZE - 1; row >= 0; row--)
-            for (let col = 0; col < BlockShapeConsts.SHAPE_SIZE ; col++) {
+            for (let col = 0; col < BlockShapeConsts.SHAPE_SIZE; col++) {
                 const shape = this.currentBlockShape.currentShapeState;
                 const gridCol = Math.floor(this.currentBlockShape.x / this.cellSize) + col;
                 const gridRow = Math.floor(this.currentBlockShape.y / this.cellSize) + row;
@@ -233,20 +240,25 @@ export default class GameArea extends Container {
         const currentGrid = this.currentGameGrid.slice();
 
         if (totalRowsToDelete) {
-            const startIdx = rowsToDelete[totalRowsToDelete-1];
+            const startIdx = rowsToDelete[totalRowsToDelete - 1];
             // delete completed rows
             const deletedRows = currentGrid.splice(startIdx, totalRowsToDelete);
             // delete displayObjects
             this.clearCellMatrix(deletedRows, totalRowsToDelete, GameAreaConsts.DEFAULT_COLUMNS);
-            const emptyLines = new Array(totalRowsToDelete).fill(null);
+
+            const emptyLines = new Array(totalRowsToDelete).fill(null).map(() => {
+                return new Array(GameAreaConsts.DEFAULT_COLUMNS).fill(0);
+            });
+
             // add empty rows to top
-            currentGrid.unshift(emptyLines);
+            currentGrid.unshift(...emptyLines);
 
             this.currentGameGrid = currentGrid;
 
             if (this.onLineCompleteCallback)
                 this.onLineCompleteCallback();
             this.invalidateGrid = true;
+            this.scoreArea.updateScore(totalRowsToDelete);
         }
     }
 
