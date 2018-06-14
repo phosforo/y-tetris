@@ -7,8 +7,18 @@ export default class Block extends Container {
         this.graphics = new Graphics();
         this.shape = shape;
         this.cellSize = cellSize;
-        this.currentState = 0;
+        const max = this.shape.states.length - 1;
+        this.currentState = Math.floor(Math.random() * (max + 1));
+        this.startRow = this.getStartingRow();
         this.addChild(this.graphics);
+    }
+
+    getStartingRow() {
+        for (let row = 0 ; row < BlockShapeConst.SHAPE_SIZE; row++)
+            for (let col = 0; col < BlockShapeConst.SHAPE_SIZE; col++)
+                if (this.currentShapeState[row][col])
+                    return row;
+        return 0;
     }
 
     get blockShape () {

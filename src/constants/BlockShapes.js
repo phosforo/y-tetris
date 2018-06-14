@@ -25,8 +25,7 @@ export const I_SHAPE = {
             [1,1,1,1],
             [0,0,0,0]
         ]],
-    color: 0x00FFFF,
-    startRow:0
+    color: 0x00FFFF
 };
 
 export const L_SHAPE = {
@@ -55,8 +54,7 @@ export const L_SHAPE = {
         [0,0,0,0],
         [0,0,0,0]
         ]],
-    color: "0xFFA500",
-    startRow:0
+    color: "0xFFA500"
 };
 
 export const J_SHAPE = {
@@ -85,8 +83,7 @@ export const J_SHAPE = {
             [0,0,1,0],
             [0,0,0,0]
         ]],
-    color: "0x0000FF",
-    startRow:0
+    color: "0x0000FF"
 };
 
 export const O_SHAPE = {
@@ -115,8 +112,7 @@ export const O_SHAPE = {
             [0,0,0,0],
             [0,0,0,0]
         ]],
-    color: "0xFFFF00",
-    startRow:0
+    color: "0xFFFF00"
 };
 
 export const T_SHAPE = {
@@ -145,8 +141,7 @@ export const T_SHAPE = {
             [0,1,0,0],
             [0,0,0,0]
         ]],
-    color: "0x800080",
-    startRow:1
+    color: "0x800080"
 };
 
 export const Z_SHAPE = {
@@ -175,8 +170,7 @@ export const Z_SHAPE = {
             [0,1,0,0],
             [0,0,0,0]
         ]],
-    color: "0xFF0000",
-    startRow:1
+    color: "0xFF0000"
 };
 
 export const S_SHAPE = {
@@ -205,8 +199,7 @@ export const S_SHAPE = {
             [0,0,1,0],
             [0,0,0,0]
         ]],
-    color: "0x00FF00",
-    startRow:1
+    color: "0x00FF00"
 };
 
 

@@ -73,7 +73,7 @@ export default class GameArea extends Container {
         const newBlockToPlay = this.blockFactory.next();
         const blockMatrixSize = this.cellSize * BlockShapeConsts.SHAPE_SIZE;
         const startCol = Math.floor((this.internalWidth - blockMatrixSize) * 0.5);
-        const startRow = -newBlockToPlay.blockShape.startRow * this.cellSize;
+        const startRow = -newBlockToPlay.startRow * this.cellSize;
         this.currentBlockShape = newBlockToPlay;
         this.currentBlockShape.x = startCol;
         this.currentBlockShape.y = startRow;
